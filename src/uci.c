@@ -162,6 +162,10 @@ void uciGo(UCIGoStruct *ucigo, pthread_t *pthread, Thread *threads, Board *board
     uint16_t moves[MAX_MOVES];
     int size = genAllLegalMoves(board, moves), idx = 0;
 
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 1 * 1024 * 1024);
+
     Limits *limits = &ucigo->limits;
     memset(limits, 0, sizeof(Limits));
 
@@ -216,8 +220,9 @@ void uciGo(UCIGoStruct *ucigo, pthread_t *pthread, Thread *threads, Board *board
     ucigo->threads = threads;
 
     // Spawn a new thread to handle the search
-    pthread_create(pthread, NULL, &start_search_threads, ucigo);
+    pthread_create(pthread, &attr, &start_search_threads, ucigo);
     pthread_detach(*pthread);
+    pthread_attr_destroy(&attr);
 }
 
 void uciSetOption(char *str, Thread **threads, int *multiPV, int *chess960) {
